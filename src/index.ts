@@ -8,6 +8,7 @@ import { registerSpecDiff } from "./tools/specDiff.js";
 import { registerVerifyUpload } from "./tools/verifyUpload.js";
 import { registerSyncTokens } from "./tools/syncTokens.js";
 import { registerTokenCoverage } from "./tools/tokenCoverage.js";
+import { registerFigmaInteractions } from "./tools/figmaInteractions.js";
 
 async function main(): Promise<void> {
   const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });
@@ -18,6 +19,7 @@ async function main(): Promise<void> {
   registerVerifyUpload(server);
   registerSyncTokens(server);
   registerTokenCoverage(server);
+  registerFigmaInteractions(server);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

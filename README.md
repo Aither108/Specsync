@@ -21,6 +21,7 @@ It fixes both by moving the work out of prose instructions and into **determinis
 | `specsync_verify_upload` | Round-trips a change: fetches the file back from the portal (did it **sync**?) and greps the live URL (did it **render**?), then diagnoses the cause when it didn't. |
 | `specsync_sync_tokens` | Pulls Figma **Variables** into a `tokens.css` of CSS custom properties, so design and theme read spacing/colour/type from one source (the root fix for drift). |
 | `specsync_token_coverage` | Cross-references the values a design uses against its Figma variables and reports the **untokenised** ones — the values that will drift and should be variable-ized. |
+| `specsync_figma_interactions` | Loads the **behavioural** spec — prototype interactions, flows, and component variant matrices — captured by the SpecSync Interactions Figma plugin. Tells the AI what's clickable, where it navigates, what opens an overlay, and the variant matrix, with a per-interaction implementation checklist. |
 
 All tools emit the same `SpecProps` shape, which is what makes the diff mechanical rather than a judgement call.
 
@@ -76,7 +77,21 @@ Because it speaks MCP, every agent that connects gets the same five tools — th
 
 ---
 
+## The Figma plugin (behaviour capture)
+
+The `plugin/` folder is a Figma plugin that extracts what the REST API can't fully see — **prototype interactions, flows, and component variant matrices** — and emits an `interaction-spec.json` that `specsync_figma_interactions` consumes.
+
+**Install (Figma desktop):** Plugins → Development → Import plugin from manifest → select `plugin/manifest.json`. It runs on any plan (the Plugin API isn't Enterprise-gated like Code Connect or the Variables REST API).
+
+**Use:** select a frame/section (or nothing for the whole page) → run **SpecSync Interactions** → **Extract** → **Copy JSON** → pass it to `specsync_figma_interactions` (`json` param). Optionally tick "POST to local bridge" to send it to a SpecSync bridge at `http://localhost:7331`.
+
+Each interaction comes with an `implHint` (anchor-link, js-overlay, external-link, scroll-anchor, …) so the AI builds the right web construct. **Verification note:** behaviour capture is exact, but unlike `spec_diff` you can't numerically diff it — link targets and overlay appearance are browser-checkable; transition timing/easing are a human review.
+
+---
+
 ## Notes & limits
+
+- `figma_interactions` consumes the plugin's output; it does not call Figma itself. Run the plugin, then pass its JSON.
 
 - `sync_tokens` uses the Figma Variables REST API, which requires an **Enterprise** plan; on lower plans it returns a clear message and you define `tokens.css` by hand.
 - `live_spec` reads one viewport per call at the page's default size; call it per breakpoint (resize via your client or extend the tool) for responsive checks.

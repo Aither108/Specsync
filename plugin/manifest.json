@@ -1,0 +1,13 @@
+{
+  "name": "SpecSync Interactions",
+  "id": "specsync-interactions",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma", "dev"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:7331"],
+    "reasoning": "Optional: POST the extracted interaction-spec to a local SpecSync bridge. Disabled unless the bridge is running; copy/download always work offline."
+  }
+}

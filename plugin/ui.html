@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body { font-family: Inter, sans-serif; font-size: 12px; margin: 0; padding: 12px; color: #1b1c1f; }
+      h1 { font-size: 13px; margin: 0 0 8px; }
+      p { color: #555; margin: 0 0 10px; line-height: 1.4; }
+      button { font: inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+      button.primary { background: #1b1c1f; color: #fff; border-color: #1b1c1f; }
+      .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+      .counts { font-size: 11px; color: #333; margin-top: 8px; }
+      label { font-size: 11px; color: #555; display: flex; gap: 6px; align-items: center; }
+      .err { color: #c00; }
+      .ok { color: #0a7d28; }
+    </style>
+  </head>
+  <body>
+    <h1>SpecSync Interactions</h1>
+    <p>Select a frame/section (or nothing for the whole page), then extract its reactions, flows, and component variants.</p>
+    <div class="row">
+      <button class="primary" id="extract">Extract</button>
+      <button id="copy" disabled>Copy JSON</button>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="bridge" /> also POST to local SpecSync bridge</label>
+    </div>
+    <div class="counts" id="counts"></div>
+
+    <script>
+      var lastJson = "";
+      var extractBtn = document.getElementById("extract");
+      var copyBtn = document.getElementById("copy");
+      var countsEl = document.getElementById("counts");
+
+      extractBtn.onclick = function () {
+        countsEl.textContent = "Extracting…";
+        parent.postMessage({ pluginMessage: { type: "extract", sendToBridge: document.getElementById("bridge").checked } }, "*");
+      };
+
+      copyBtn.onclick = function () {
+        var ta = document.createElement("textarea");
+        ta.value = lastJson;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        copyBtn.textContent = "Copied!";
+        setTimeout(function () { copyBtn.textContent = "Copy JSON"; }, 1200);
+      };
+
+      onmessage = function (event) {
+        var msg = event.data.pluginMessage;
+        if (!msg) return;
+        if (msg.type === "result") {
+          lastJson = msg.json;
+          copyBtn.disabled = false;
+          countsEl.innerHTML = "Found <b>" + msg.counts.interactions + "</b> interactions, <b>" +
+            msg.counts.flows + "</b> flows, <b>" + msg.counts.components + "</b> components.";
+        } else if (msg.type === "bridge") {
+          countsEl.innerHTML += msg.ok
+            ? ' <span class="ok">· sent to bridge</span>'
+            : ' <span class="err">· bridge unreachable (start it, or just Copy)</span>';
+        } else if (msg.type === "error") {
+          countsEl.innerHTML = '<span class="err">Error: ' + msg.error + "</span>";
+        }
+      };
+    </script>
+  </body>
+</html>
